@@ -70,6 +70,9 @@
 
         footer { padding: 50px 0; border-top: 1px solid rgba(255,255,255,0.05); opacity: 0.7; }
 
+        /* تجميل نص التحميل */
+        #loading-msg { grid-column: 1 / -1; font-size: 1.2rem; color: var(--primary-gold); margin-top: 20px; }
+
         @media (max-width: 768px) {
             .stats-panel { padding: 20px; gap: 20px; border-radius: 50px; }
             .hero h1 { font-size: 2.8rem; }
@@ -107,17 +110,8 @@
     <h2 class="section-title">معرض المشاريع</h2>
     <div class="title-line"></div>
 
-    <div class="grid">
-        <a href="https://barq-aday-commits.github.io/restaurant2/" target="_blank" class="project-card"><i class="fas fa-utensils"></i><h3>The Restaurant</h3><p>نظام طلبات تفاعلي متكامل</p></a>
-        <a href="https://barq-aday-commits.github.io/Skin-care-products1/" target="_blank" class="project-card"><i class="fas fa-spa"></i><h3>Skin Care</h3><p>متجر إلكتروني لمنتجات التجميل</p></a>
-        <a href="https://barq-aday-commits.github.io/Technology1/" target="_blank" class="project-card"><i class="fas fa-microchip"></i><h3>Nexus Tech</h3><p>حلول برمجية متطورة</p></a>
-        <a href="https://barq-aday-commits.github.io/Samra/" target="_blank" class="project-card"><i class="fas fa-medal"></i><h3>Samra Brand</h3><p>هوية للمنتجات الوطنية</p></a>
-        <a href="https://barq-aday-commits.github.io/roka-store-my-shop/" target="_blank" class="project-card"><i class="fas fa-shopping-bag"></i><h3>Roka Fashion</h3><p>منصة أزياء عصرية</p></a>
-        <a href="https://barq-aday-commits.github.io/Sisaf-/" target="_blank" class="project-card"><i class="fas fa-wind"></i><h3>Sisaf Perfumes</h3><p>متجر عطور فاخر</p></a>
-        <a href="https://barq-aday-commits.github.io/The-educational-reality-in-Iraq-1/" target="_blank" class="project-card"><i class="fas fa-university"></i><h3>الواقع التعليمي</h3><p>تحليل البيانات التعليمية في العراق</p></a>
-        <a href="https://barq-aday-commits.github.io/landing-page-/" target="_blank" class="project-card"><i class="fas fa-rocket"></i><h3>Landing Page</h3><p>صفحة هبوط تسويقية جذابة</p></a>
-        <a href="https://barq-aday-commits.github.io/drop-/" target="_blank" class="project-card"><i class="fas fa-tint"></i><h3>Drop Project</h3><p>تصميم واجهة مستخدم ناعمة</p></a>
-        <a href="https://barq-aday-commits.github.io/The-educational-reality-in-Iraq-/" target="_blank" class="project-card"><i class="fas fa-book"></i><h3>التعليم 2</h3><p>نسخة مطورة لمشروع البيانات</p></a>
+    <div class="grid" id="projects-container">
+        <p id="loading-msg">جاري تحميل المشاريع من السحاب...</p>
     </div>
 
     <footer>
@@ -125,6 +119,48 @@
     </footer>
 
     <script>
+        // رابط البيانات الخاص بك
+        const SHEET_ID = '1rC9gHgwX3SyP6TTVcMlTNOGlJXuUtKsRWCdxAemBYI4';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+
+        async function loadProjects() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                
+                // تنظيف رد غوغل لتحويله لـ JSON
+                const jsonData = JSON.parse(text.substr(47).slice(0, -2));
+                const rows = jsonData.table.rows;
+                
+                const container = document.getElementById('projects-container');
+                container.innerHTML = ''; // مسح رسالة التحميل
+
+                rows.forEach(row => {
+                    // توزيع البيانات (تأكد أن ترتيب الأعمدة في الشيت هو: العنوان، الوصف، الرابط، الأيقونة)
+                    const title = row.c[0] ? row.c[0].v : 'مشروع جديد';
+                    const desc  = row.c[1] ? row.c[1].v : 'جاري العمل على الوصف...';
+                    const link  = row.c[2] ? row.c[2].v : '#';
+                    const icon  = row.c[3] ? row.c[3].v : 'fas fa-rocket';
+
+                    const projectCard = `
+                        <a href="${link}" target="_blank" class="project-card">
+                            <i class="${icon}"></i>
+                            <h3>${title}</h3>
+                            <p>${desc}</p>
+                        </a>
+                    `;
+                    container.innerHTML += projectCard;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading-msg').innerText = 'فشل في الاتصال ببيانات غوغل.';
+            }
+        }
+
+        // تشغيل الجلب التلقائي
+        loadProjects();
+
+        // وظيفة تبديل الوضع الليلي
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
         }
